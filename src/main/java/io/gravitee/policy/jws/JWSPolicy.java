@@ -15,13 +15,15 @@
  */
 package io.gravitee.policy.jws;
 
+import io.gravitee.common.http.HttpHeaders;
 import io.gravitee.common.http.HttpStatusCode;
 import io.gravitee.common.http.MediaType;
 import io.gravitee.gateway.api.ExecutionContext;
 import io.gravitee.gateway.api.Request;
 import io.gravitee.gateway.api.buffer.Buffer;
-import io.gravitee.gateway.api.http.stream.TransformableRequestStreamBuilder;
+import io.gravitee.gateway.api.stream.BufferedReadWriteStream;
 import io.gravitee.gateway.api.stream.ReadWriteStream;
+import io.gravitee.gateway.api.stream.SimpleReadWriteStream;
 import io.gravitee.gateway.api.stream.exception.TransformationException;
 import io.gravitee.policy.api.PolicyChain;
 import io.gravitee.policy.api.PolicyResult;
@@ -30,6 +32,7 @@ import io.gravitee.policy.jws.configuration.JWSPolicyConfiguration;
 import io.gravitee.policy.jws.utils.JsonUtils;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.impl.DefaultClaims;
+import io.netty.buffer.ByteBuf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -103,11 +106,50 @@ public class JWSPolicy {
 
     @OnRequestContent
     public ReadWriteStream onRequestContent(Request request, ExecutionContext executionContext, PolicyChain policyChain) {
-        return TransformableRequestStreamBuilder
-                .on(request)
-                .contentType(MediaType.APPLICATION_JSON)
-                .transform(map(executionContext, policyChain))
-                .build();
+        return new BufferedReadWriteStream() {
+            Buffer buffer = Buffer.buffer();
+
+            @Override
+            public SimpleReadWriteStream<Buffer> write(Buffer content) {
+                buffer.appendBuffer(content);
+                return this;
+            }
+
+            @Override
+            public void end() {
+                try {
+                    DefaultClaims jwtClaims = validateJsonWebToken(buffer.toString(), executionContext);
+
+                    String payload = JsonUtils.writeValueAsString(jwtClaims);
+
+                    // Set content length (remove useless transfer encoding header)
+                    request.headers().remove(HttpHeaders.TRANSFER_ENCODING);
+                    if (payload != null) {
+                        request.headers().set(HttpHeaders.CONTENT_LENGTH, Integer.toString(payload.length()));
+                    }
+
+                    request.headers().set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON);
+
+                    // Write content
+                    super.write(Buffer.buffer(payload));
+
+                    // Mark the end of content
+                    super.end();
+                } catch (UnsupportedJwtException | ExpiredJwtException | MalformedJwtException
+                        | SignatureException | IllegalArgumentException | CertificateException ex) {
+                    LOGGER.error("Failed to decoding JWS token", ex);
+                    request.metrics().setMessage(ex.getMessage());
+                    policyChain.streamFailWith(PolicyResult.failure(HttpStatusCode.BAD_REQUEST_400, "Bad Request"));
+                } catch (Exception ex) {
+                    LOGGER.error("Error occurs while decoding JWS token", ex);
+                    request.metrics().setMessage(ex.getMessage());
+                    policyChain.streamFailWith(PolicyResult.failure(HttpStatusCode.BAD_REQUEST_400, "Bad Request"));
+                } finally {
+                    // Clear previous buffer
+                    ((ByteBuf) buffer.getNativeBuffer()).clear();
+                }
+            }
+        };
     }
 
     Function<Buffer, Buffer> map(ExecutionContext executionContext, PolicyChain policyChain) {
@@ -119,7 +161,7 @@ public class JWSPolicy {
                     | SignatureException | IllegalArgumentException | CertificateException ex) {
                 LOGGER.error("Failed to decoding JWS token", ex);
                 policyChain.streamFailWith(PolicyResult.failure(HttpStatusCode.UNAUTHORIZED_401, "Unauthorized"));
-                return null;
+                throw new TransformationException("Unable to apply JWS decode: " + ex.getMessage(), ex);
             } catch (Exception ex) {
                 LOGGER.error("Error occurs while decoding JWS token", ex);
                 throw new TransformationException("Unable to apply JWS decode: " + ex.getMessage(), ex);
