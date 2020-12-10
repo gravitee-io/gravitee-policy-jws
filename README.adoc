@@ -25,7 +25,7 @@ JWT in JWS format enables secure content to be shared across security domains. T
 === JWT
 
 A JWT is composed of three parts: a header, a payload and a signature.
-You can see some samples here: http://jwt.io.
+You can see some examples here: http://jwt.io.
 
 - The header contains attributes indicating the algorithm used to sign the token.
 
@@ -98,7 +98,7 @@ and check that the JWT was signed using the private key corresponding to the spe
 
 == Errors
 
-== HTTP status code
+=== HTTP status code
 
 |===
 |Code |Message
