@@ -1,4 +1,4 @@
-= JWS validator Policy documentation.
+= JWS validator policy
 
 == Phase
 
@@ -10,32 +10,30 @@
 |===
 
 
-== Context
+== Description
 
-JWT in JWS format enables secure content to be shared across security domains.
+You can use the `jws-validator` policy to validate the JWS token signature, certificate information and expiration date before sending the API call to the target backend.
 
-JWS (Json Web Signature) standard RFC : https://tools.ietf.org/html/rfc7515
+JWT in JWS format enables secure content to be shared across security domains. The RFC standards are as follows:
 
-JOSE Header standard RFC : https://tools.ietf.org/html/rfc7515#section-4
+- JWS (Json Web Signature) standard RFC: https://tools.ietf.org/html/rfc7515
 
-JWT (Json Web Token) standard RFC : https://tools.ietf.org/html/rfc7519
+- JOSE Header standard RFC: https://tools.ietf.org/html/rfc7515#section-4
 
-== JWT/JWS Example
+- JWT (Json Web Token) standard RFC: https://tools.ietf.org/html/rfc7519
 
-A JWT is composed of three part : header, payload, signature.
-You can see some sample here : http://jwt.io
+=== JWT
 
-The header will contain attributes indicating the algorithm used to sign the token.
+A JWT is composed of three parts: a header, a payload and a signature.
+You can see some examples here: http://jwt.io.
 
-The payload contains some informations inserted by the AS (Authorization Server) such as expiration date, uid of the user, etc…
+- The header contains attributes indicating the algorithm used to sign the token.
 
-Both header & payload are encoded on Base64, so anyone can read the content.
+- The payload contains some information inserted by the AS (Authorization Server), such as the expiration date and UID of the user.
 
-The third and last part is the signature. (Please see RFC for more details)
+Both the header and payload are encoded with Base64, so anyone can read the content.
 
-== Policy aim
-
-Policy aims to validate the token signature, certificate information & expiration date before sending the api call to the target backend.
+- The third and last part is the signature (for more details, see the RFC).
 
 == Input
 
@@ -44,21 +42,23 @@ Policy aims to validate the token signature, certificate information & expiratio
 Request Method          POST
 Request Content-Type    application/jose+json
 Request Body            eyJ0....ifQ.eyJzdWIiOiI...lIiwiYWRtaW4iOnRydWV9.TJVA95...h7HgQ
-Response Codes          Backend Response or 401 Unauthorized
+Response Codes          Backend response or 401 Unauthorized
 ======================= =================================================
 ----
 
-According to JWS rfc : https://tools.ietf.org/html/rfc7515#section-4.1.10, the JWT/JWS header must contains the following information in order to provide correct content type to the backend :
+According to the link:https://tools.ietf.org/html/rfc7515#section-4.1.10[JWS RFC], the JWT/JWS header must contain the following information if correct content is to be provided to the backend:
 
-The "typ" value "JOSE" can be used by applications to indicate that this object is a JWS or JWE using the JWS Compact Serialization or the JWE Compact Serialization.
-The "typ" value "JOSE+JSON" can be used by applications to indicate that this object is a JWS or JWE  using the JWS JSON Serialization or the JWE JSON Serialization.
+A `typ` value of `JOSE` can be used by applications to indicate that this object is a JWS or JWE using JWS Compact Serialization or the JWE Compact Serialization.
+A `typ` value of `JOSE+JSON` can be used by applications to indicate that this object is a JWS or JWE using JWS JSON Serialization or JWE JSON Serialization.
 
-The "cty" (content type) Header Parameter is used by JWS applications to declare the media type [IANA.MediaTypes] of the secured content (the payload).
-To keep messages compact in common situations, it is RECOMMENDED that senders omit an "application/" prefix of a media type value in a "cty" Header Parameter when no other '/' appears in the media type value.
+The `cty` (content type) header parameter is used by JWS applications to declare the media type [IANA.MediaTypes] of the secured content (the payload).
+To keep messages compact in typical scenarios, it is strongly recommended that senders omit the `application/` prefix of a media type value in a `cty` header parameter when no other `/` appears in the media type value.
 
-A recipient using the media type value MUST treat it as if "application/" were prepended to any "cty" value not containing a '/'.
+NOTE: A recipient using the media type value must treat it as if `application/` were prepended to any `cty` value not containing a `/`.
 
-Here, it's a valid example of JWS Header :
+== Example
+
+A valid example of a JWS header is as follows:
 
 [source, json]
 ----
@@ -76,35 +76,34 @@ Here, it's a valid example of JWS Header :
 |===
 |Property |Required |Description |Type |Default
 
-|checkCertificateValidity||Check if the certificate used to sign the JWT is valid with correct 'not_before' and 'not_after' dates|boolean|false.
+|checkCertificateValidity||Check if the certificate used to sign the JWT is correct and has valid `not_before` and `not_after` dates|boolean|false
 |checkCertificateRevocation||Check if the certificate used to sign the JWT is not revoked via the CRL Distribution Points. The CRL is stored inside the X509v3 CRL Distribution Extension Points.|boolean|false
 |===
 
-To validate the token signature, the policy need to use the associated public key set into into gravitee gateway settings, _gravitee.yml_ file.
+To validate the token signature, the policy needs to use the JWS validator policy public key set in the APIM Gateway `gravitee.yml` file:
 
 [source, yml]
 ----
-policy:                  
+policy:
   jws:
     kid:
       default: ssh-rsa myValidationKey anEmail@domain.com
       kid-2016: /filepath/to/pemFile/certificate.pem
 ----
 
-On this mode, the policy will inspect the jwt/jws :
+The policy will inspect the JWT/JWS header to extract the key id (`kid` attribute) of the public key. If no key id is found then it is set to `default`.
 
-** header in order to extract the key id (kid attribute) of the public key. If none then we set it as ‘default’.
+The gateway will be able to retrieve the corresponding public key and the JOSE Header using `x5c` (X.509 Certificate Chain). The header parameter will be used to verify certificate information
+and check that the JWT was signed using the private key corresponding to the specified public key.
 
-The gateway will be able to retrieve the corresponding public key and the JOSE Header with "x5c" (X.509 Certificate Chain) Header Parameter will be used to verify certificate information
-and check that this JWT was signed using the private key that corresponds to the specified public key.
+== Errors
 
-== Http Status Code
+=== HTTP status code
 
 |===
 |Code |Message
 
 | ```401```
-| In case of bad token format, content, signature, certificate, expired token or any others problem which forbid the policy to validate the token
+| Bad token format, content, signature, certificate, expired token or any other issue preventing the policy from validating the token
 
 |===
-
