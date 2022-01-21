@@ -20,7 +20,6 @@ package io.gravitee.policy.jws.utils;
  * @author GraviteeSource Team
  */
 public interface JwsHeader {
-
     /** JWS {@code Algorithm} header parameter name: <code>"alg"</code> */
     String ALGORITHM = "alg";
 
@@ -53,5 +52,4 @@ public interface JwsHeader {
 
     /** JWS {@code Content Type} header parameter name: <code>"cty"</code> */
     String CONTENT_TYPE = "cty";
-
 }
