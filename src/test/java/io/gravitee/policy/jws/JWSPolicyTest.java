@@ -15,6 +15,9 @@
  */
 package io.gravitee.policy.jws;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
+
 import io.gravitee.gateway.api.ExecutionContext;
 import io.gravitee.gateway.api.buffer.Buffer;
 import io.gravitee.policy.api.PolicyChain;
@@ -23,17 +26,6 @@ import io.gravitee.policy.jws.utils.JwsHeader;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.skyscreamer.jsonassert.JSONAssert;
-import org.springframework.core.env.Environment;
-
 import java.io.*;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
@@ -51,9 +43,16 @@ import java.security.spec.RSAPublicKeySpec;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import org.apache.commons.io.IOUtils;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.springframework.core.env.Environment;
 
 /**
  * @author Titouan COMPIEGNE (titouan.compiegne at graviteesource.com)
@@ -177,7 +176,6 @@ public class JWSPolicyTest {
         Assert.assertNull(ret);
     }
 
-
     @Test
     public void shouldTransformInout_wrongJOSETypeHeader() throws Exception {
         Map<String, Object> additionalHeaders = new HashMap<>();
@@ -233,7 +231,9 @@ public class JWSPolicyTest {
         CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
         String pemPath = getPemFilePath("wikipedia.pem");
         String fileContent = new String(Files.readAllBytes(Paths.get(pemPath)), Charset.forName(StandardCharsets.UTF_8.name()));
-        X509Certificate cert = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8)));
+        X509Certificate cert = (X509Certificate) certificateFactory.generateCertificate(
+            new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8))
+        );
         jwsPolicy.validateCRLSFromCertificate(cert, null);
     }
 
@@ -242,7 +242,9 @@ public class JWSPolicyTest {
         CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
         String pemPath = getPemFilePath("wikipedia.pem");
         String fileContent = new String(Files.readAllBytes(Paths.get(pemPath)), Charset.forName(StandardCharsets.UTF_8.name()));
-        X509Certificate cert = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8)));
+        X509Certificate cert = (X509Certificate) certificateFactory.generateCertificate(
+            new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8))
+        );
         jwsPolicy.validateCRLSFromCertificate(cert, new BigInteger("1336116294314909783601160591332574969"));
     }
 
@@ -267,9 +269,8 @@ public class JWSPolicyTest {
      * @return String
      * @throws Exception
      */
-    private String getJsonWebToken(String publicKeyDerFile, boolean useKeyPair, Map<String, Object> additionalHeaders) throws Exception{
-
-        Map<String,Object> header = new HashMap();
+    private String getJsonWebToken(String publicKeyDerFile, boolean useKeyPair, Map<String, Object> additionalHeaders) throws Exception {
+        Map<String, Object> header = new HashMap();
         header.put("alg", "RS256");
         header.put("kid", KID);
         header.put("x5c", getPublicKeyCertificateX5CDERFormat(publicKeyDerFile));
@@ -304,7 +305,7 @@ public class JWSPolicyTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         /* encode the "ssh-rsa" string */
         try {
-            byte[] sshrsa = new byte[] {0, 0, 0, 7, 's', 's', 'h', '-', 'r', 's', 'a'};
+            byte[] sshrsa = new byte[] { 0, 0, 0, 7, 's', 's', 'h', '-', 'r', 's', 'a' };
             out.write(sshrsa);
             /* Encode the public exponent */
             BigInteger e = ((RSAPublicKey) keyPair().getPublic()).getPublicExponent();
@@ -397,10 +398,10 @@ public class JWSPolicyTest {
 
     private void encodeUInt32(int value, OutputStream out) throws IOException {
         byte[] tmp = new byte[4];
-        tmp[0] = (byte)((value >>> 24) & 0xff);
-        tmp[1] = (byte)((value >>> 16) & 0xff);
-        tmp[2] = (byte)((value >>> 8) & 0xff);
-        tmp[3] = (byte)(value & 0xff);
+        tmp[0] = (byte) ((value >>> 24) & 0xff);
+        tmp[1] = (byte) ((value >>> 16) & 0xff);
+        tmp[2] = (byte) ((value >>> 8) & 0xff);
+        tmp[3] = (byte) (value & 0xff);
         out.write(tmp);
     }
 }

@@ -30,12 +30,6 @@ import io.gravitee.policy.jws.configuration.JWSPolicyConfiguration;
 import io.gravitee.policy.jws.utils.JsonUtils;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.impl.DefaultClaims;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.env.Environment;
-import sun.security.x509.*;
-
-import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.URI;
@@ -55,11 +49,16 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.xml.bind.DatatypeConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
+import sun.security.x509.*;
 
 /**
  * @author Titouan COMPIEGNE (titouan.compiegne at graviteesource.com)
  * @author GraviteeSource Team
-*/
+ */
 public class JWSPolicy {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JWSPolicy.class);
@@ -83,7 +82,7 @@ public class JWSPolicy {
      * the JWE Compact Serialization.
      */
     private static final String JSON_TYP = "JSON";
-    private static final String[] AUTHORIZED_TYPES = new String[] { JSON_TYP, JOSE_JSON_TYP};
+    private static final String[] AUTHORIZED_TYPES = new String[] { JSON_TYP, JOSE_JSON_TYP };
 
     /**
      * The "cty" (content type) Header Parameter is used by JWS applications
@@ -104,10 +103,10 @@ public class JWSPolicy {
     @OnRequestContent
     public ReadWriteStream onRequestContent(Request request, ExecutionContext executionContext, PolicyChain policyChain) {
         return TransformableRequestStreamBuilder
-                .on(request)
-                .contentType(MediaType.APPLICATION_JSON)
-                .transform(map(executionContext, policyChain))
-                .build();
+            .on(request)
+            .contentType(MediaType.APPLICATION_JSON)
+            .transform(map(executionContext, policyChain))
+            .build();
     }
 
     Function<Buffer, Buffer> map(ExecutionContext executionContext, PolicyChain policyChain) {
@@ -115,8 +114,14 @@ public class JWSPolicy {
             try {
                 DefaultClaims jwtClaims = validateJsonWebToken(input.toString(), executionContext);
                 return Buffer.buffer(JsonUtils.writeValueAsString(jwtClaims));
-            } catch (UnsupportedJwtException | ExpiredJwtException | MalformedJwtException
-                    | SignatureException | IllegalArgumentException | CertificateException ex) {
+            } catch (
+                UnsupportedJwtException
+                | ExpiredJwtException
+                | MalformedJwtException
+                | SignatureException
+                | IllegalArgumentException
+                | CertificateException ex
+            ) {
                 LOGGER.error("Failed to decoding JWS token", ex);
                 policyChain.streamFailWith(PolicyResult.failure(HttpStatusCode.UNAUTHORIZED_401, "Unauthorized"));
                 return null;
@@ -168,7 +173,10 @@ public class JWSPolicy {
 
         // 5 : compare certificate public key with given public key
         // Verifies that this certificate was signed using the private key that corresponds to the specified public key.
-        RSAPublicKey givenPublicKey = (RSAPublicKey) signingKeyResolver.resolveSigningKey((JwsHeader) token.getHeader(), (Claims) token.getBody());
+        RSAPublicKey givenPublicKey = (RSAPublicKey) signingKeyResolver.resolveSigningKey(
+            (JwsHeader) token.getHeader(),
+            (Claims) token.getBody()
+        );
         RSAPublicKey certificatePublicKey = (RSAPublicKey) cert.getPublicKey();
 
         if (certificatePublicKey.getPublicExponent().compareTo(givenPublicKey.getPublicExponent()) != 0) {
@@ -208,7 +216,7 @@ public class JWSPolicy {
                 }
                 Environment env = executionContext.getComponent(Environment.class);
                 String publicKey = env.getProperty(String.format(PUBLIC_KEY_PROPERTY, keyId));
-                if(publicKey==null || publicKey.trim().isEmpty()) {
+                if (publicKey == null || publicKey.trim().isEmpty()) {
                     return null;
                 }
                 // Public key can be either "ssh-(rsa|dsa) ([A-Za-z0-9/+]+=*) (.*)" string format
@@ -237,15 +245,21 @@ public class JWSPolicy {
         CRLDistributionPointsExtension crlDistroExtension = x509Cert.getCRLDistributionPointsExtension();
         if (crlDistroExtension != null) {
             try {
-                ArrayList<DistributionPoint> distributionPoints = (ArrayList<DistributionPoint>) crlDistroExtension.get(CRLDistributionPointsExtension.POINTS);
+                ArrayList<DistributionPoint> distributionPoints = (ArrayList<DistributionPoint>) crlDistroExtension.get(
+                    CRLDistributionPointsExtension.POINTS
+                );
                 Iterator<DistributionPoint> iterator = distributionPoints.iterator();
                 boolean hasError = false;
                 while (iterator.hasNext()) {
-                    if (revokedCertificate != null) { break; }
+                    if (revokedCertificate != null) {
+                        break;
+                    }
                     GeneralNames distroName = iterator.next().getFullName();
                     for (int i = 0; i < distroName.size(); ++i) {
                         hasError = false;
-                        if (revokedCertificate != null) { break; }
+                        if (revokedCertificate != null) {
+                            break;
+                        }
                         DataInputStream inStream = null;
                         try {
                             URI uri = ((URIName) distroName.get(i).getName()).getURI();
@@ -253,7 +267,8 @@ public class JWSPolicy {
                             URLConnection connection = url.openConnection();
                             inStream = new DataInputStream(connection.getInputStream());
                             crl = (X509CRL) certificateFactory().generateCRL(inStream);
-                            revokedCertificate = crl.getRevokedCertificate(serialNumber != null ? serialNumber : certificate.getSerialNumber());
+                            revokedCertificate =
+                                crl.getRevokedCertificate(serialNumber != null ? serialNumber : certificate.getSerialNumber());
                         } catch (Exception e) {
                             hasError = true;
                             LOGGER.warn("Failed to get the certificate revocation list, try the next one if any", e);
@@ -272,7 +287,6 @@ public class JWSPolicy {
                 }
             } catch (IOException ex) {
                 throw new CertificateException("Failed to get CRL distribution points");
-
             }
         } else {
             throw new CertificateException("Failed to find CRL distribution points for the given certificate");
@@ -316,7 +330,7 @@ public class JWSPolicy {
      * @return RSAPublicKey
      */
     private static RSAPublicKey parseSSHPublicKey(String encKey) {
-        final byte[] PREFIX = new byte[] {0,0,0,7, 's','s','h','-','r','s','a'};
+        final byte[] PREFIX = new byte[] { 0, 0, 0, 7, 's', 's', 'h', '-', 'r', 's', 'a' };
         ByteArrayInputStream in = new ByteArrayInputStream(Base64.getDecoder().decode(StandardCharsets.UTF_8.encode(encKey)).array());
 
         byte[] prefix = new byte[11];
@@ -326,8 +340,8 @@ public class JWSPolicy {
                 throw new IllegalArgumentException("SSH key prefix not found");
             }
 
-            BigInteger e = new BigInteger(readBigInteger(in));//public exponent
-            BigInteger n = new BigInteger(readBigInteger(in));//modulus
+            BigInteger e = new BigInteger(readBigInteger(in)); //public exponent
+            BigInteger n = new BigInteger(readBigInteger(in)); //modulus
 
             return createPublicKey(n, e);
         } catch (IOException e) {
@@ -344,8 +358,7 @@ public class JWSPolicy {
     static RSAPublicKey createPublicKey(BigInteger n, BigInteger e) {
         try {
             return (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(new RSAPublicKeySpec(n, e));
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }
