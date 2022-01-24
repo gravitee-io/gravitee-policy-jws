@@ -198,6 +198,13 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <additionalJOption>--add-exports=java.base/sun.security.x509=ALL-UNNAMED</additionalJOption>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>com.hubspot.maven.plugins</groupId>
                 <artifactId>prettier-maven-plugin</artifactId>
                 <version>0.17</version>
