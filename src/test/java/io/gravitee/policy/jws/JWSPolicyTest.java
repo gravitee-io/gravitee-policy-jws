@@ -245,7 +245,7 @@ public class JWSPolicyTest {
         X509Certificate cert = (X509Certificate) certificateFactory.generateCertificate(
             new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8))
         );
-        jwsPolicy.validateCRLSFromCertificate(cert, new BigInteger("1336116294314909783601160591332574969"));
+        jwsPolicy.validateCRLSFromCertificate(cert, new BigInteger("17521746654160821224073118409816269840"));
     }
 
     private void shouldTransformInput_validX5CHeader_withPemFile(String pemFile) throws Exception {
