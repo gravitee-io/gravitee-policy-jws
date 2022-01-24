@@ -242,8 +242,10 @@ public class JWSPolicyTest {
         CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
         String pemPath = getPemFilePath("wikipedia.pem");
         String fileContent = new String(Files.readAllBytes(Paths.get(pemPath)), Charset.forName(StandardCharsets.UTF_8.name()));
-        X509Certificate cert = (X509Certificate) certificateFactory.generateCertificate(new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8)));
-        jwsPolicy.validateCRLSFromCertificate(cert, new BigInteger("1336116294314909783601160591332574969"));
+        X509Certificate cert = (X509Certificate) certificateFactory.generateCertificate(
+            new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8))
+        );
+        jwsPolicy.validateCRLSFromCertificate(cert, new BigInteger("17521746654160821224073118409816269840"));
     }
 
     private void shouldTransformInput_validX5CHeader_withPemFile(String pemFile) throws Exception {
