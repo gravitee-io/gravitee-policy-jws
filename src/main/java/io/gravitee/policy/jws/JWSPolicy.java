@@ -104,6 +104,7 @@ public class JWSPolicy {
     public ReadWriteStream onRequestContent(Request request, ExecutionContext executionContext, PolicyChain policyChain) {
         return TransformableRequestStreamBuilder
             .on(request)
+            .chain(policyChain)
             .contentType(MediaType.APPLICATION_JSON)
             .transform(map(executionContext, policyChain))
             .build();
