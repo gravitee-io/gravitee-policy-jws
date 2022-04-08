@@ -143,7 +143,7 @@ public class JWSPolicy {
         JwtParser jwtParser = Jwts.parser();
         SigningKeyResolver signingKeyResolver = getSigningKeyResolverByGatewaySettings(executionContext);
         jwtParser.setSigningKeyResolver(signingKeyResolver);
-        final Jwt token = jwtParser.parse(jwt);
+        final Jws<Claims> token = jwtParser.parseClaimsJws(jwt);
 
         // 2 : check if typ header is present and equals to the specified values (currently JSON and JOSE+JSON)
         String type = (String) token.getHeader().get(io.gravitee.policy.jws.utils.JwsHeader.TYPE);
@@ -174,10 +174,7 @@ public class JWSPolicy {
 
         // 5 : compare certificate public key with given public key
         // Verifies that this certificate was signed using the private key that corresponds to the specified public key.
-        RSAPublicKey givenPublicKey = (RSAPublicKey) signingKeyResolver.resolveSigningKey(
-            (JwsHeader) token.getHeader(),
-            (Claims) token.getBody()
-        );
+        RSAPublicKey givenPublicKey = (RSAPublicKey) signingKeyResolver.resolveSigningKey(token.getHeader(), token.getBody());
         RSAPublicKey certificatePublicKey = (RSAPublicKey) cert.getPublicKey();
 
         if (certificatePublicKey.getPublicExponent().compareTo(givenPublicKey.getPublicExponent()) != 0) {
