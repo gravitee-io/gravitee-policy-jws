@@ -34,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.*;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateCrtKey;
@@ -237,16 +238,37 @@ public class JWSPolicyTest {
         jwsPolicy.validateCRLSFromCertificate(cert, null);
     }
 
-    @Test(expected = CertificateException.class)
+    @Test
     public void shouldValidateCRL_certificateException() throws Exception {
         CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
-        String pemPath = getPemFilePath("wikipedia.pem");
+        String pemPath = getPemFilePath("revoked.pem");
         String fileContent = new String(Files.readAllBytes(Paths.get(pemPath)), Charset.forName(StandardCharsets.UTF_8.name()));
         X509Certificate cert = (X509Certificate) certificateFactory.generateCertificate(
             new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8))
         );
-        // WARNING: this test is based on real certificate from Wikipedia. Depending on the state of the expired certificates entries, it could be broken.
-        jwsPolicy.validateCRLSFromCertificate(cert, new BigInteger("18135611436097276018781887707242686781"));
+        /*
+         * WARNING:
+         * this test is based on a fake certificate from https://badssl.com/. (See also https://github.com/chromium/badssl.com)
+         * As this certificate will expire, it will need to be regenerated. Here is how to do it:
+         *  - go to src/test/resources/io/gravitee/policy/jws
+         *  - run the following command:
+         * echo | openssl s_client -connect revoked.badssl.com:443 | openssl x509 > revoked.pem
+         */
+        try {
+            cert.checkValidity();
+        } catch (CertificateExpiredException e) {
+            Assert.assertFalse(
+                "Certificate has expired. Consider generating a new one with the command:\n\techo | openssl s_client -connect revoked.badssl.com:443 | openssl x509 > revoked.pem",
+                true
+            );
+        }
+
+        try {
+            jwsPolicy.validateCRLSFromCertificate(cert, null);
+            Assert.assertFalse("Certificate should not be valid", true);
+        } catch (CertificateException e) {
+            Assert.assertTrue(true);
+        }
     }
 
     private void shouldTransformInput_validX5CHeader_withPemFile(String pemFile) throws Exception {
