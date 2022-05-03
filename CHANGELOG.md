@@ -1,3 +1,10 @@
+## [1.3.3](https://github.com/gravitee-io/gravitee-policy-jws/compare/1.3.2...1.3.3) (2022-05-03)
+
+
+### Bug Fixes
+
+* properly verify signature ([9ef7734](https://github.com/gravitee-io/gravitee-policy-jws/commit/9ef77345fa1fb4732c8d58226ec0108f516e214e))
+
 ## [1.3.2](https://github.com/gravitee-io/gravitee-policy-jws/compare/1.3.1...1.3.2) (2022-03-04)
 
 
