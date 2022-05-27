@@ -29,6 +29,14 @@ JWT in JWS format enables secure content to be shared across security domains. T
 
 - JWT (Json Web Token) standard RFC: https://tools.ietf.org/html/rfc7519
 
+== Compatibility with APIM
+
+|===
+|Plugin version | APIM version
+
+|Up to 1.x                   | All
+|===
+
 === JWT
 
 A JWT is composed of three parts: a header, a payload and a signature.

@@ -30,22 +30,41 @@
     <parent>
         <groupId>io.gravitee</groupId>
         <artifactId>gravitee-parent</artifactId>
-        <version>17.2</version>
+        <version>20.2</version>
     </parent>
 
     <properties>
+        <gravitee-bom.version>2.5</gravitee-bom.version>
         <gravitee-gateway.version>3.5.0</gravitee-gateway.version>
-        <gravitee-gateway-api.version>1.23.0</gravitee-gateway-api.version>
-        <gravitee-policy-api.version>1.10.0</gravitee-policy-api.version>
-        <gravitee-common.version>1.19.0</gravitee-common.version>
+        <gravitee-gateway-api.version>1.32.2</gravitee-gateway-api.version>
+        <gravitee-policy-api.version>1.11.0</gravitee-policy-api.version>
+        <gravitee-common.version>1.26.1</gravitee-common.version>
+
+        <commons-io.version>2.11.0</commons-io.version>
+        <jaxb-api.version>2.3.1</jaxb-api.version>
         <jjwt.version>0.9.1</jjwt.version>
+        <jsonassert.version>1.5.0</jsonassert.version>
 
         <json-schema-generator-maven-plugin.version>1.1.0</json-schema-generator-maven-plugin.version>
         <json-schema-generator-maven-plugin.outputDirectory>${project.build.directory}/schemas</json-schema-generator-maven-plugin.outputDirectory>
 
-        <maven-assembly-plugin.version>2.5.5</maven-assembly-plugin.version>
+        <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
         <publish-folder-path>graviteeio-apim/plugins/policies</publish-folder-path>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Gravitee dependencies -->
+            <!-- Import bom to properly inherit all dependencies -->
+            <dependency>
+                <groupId>io.gravitee</groupId>
+                <artifactId>gravitee-bom</artifactId>
+                <version>${gravitee-bom.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <!-- Provided scope -->
@@ -88,7 +107,6 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -96,49 +114,45 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-core</artifactId>
-            <version>${spring.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
-            <version>2.3.0</version>
+            <version>${jaxb-api.version}</version>
         </dependency>
 
         <!-- Test scope -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>1.3.2</version>
+            <version>${commons-io.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.skyscreamer</groupId>
             <artifactId>jsonassert</artifactId>
-            <version>1.4.0</version>
+            <version>${jsonassert.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -192,6 +206,13 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <compilerArgument>--add-exports=java.base/sun.security.x509=ALL-UNNAMED</compilerArgument>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <argLine>--add-opens java.base/sun.security.x509=ALL-UNNAMED</argLine>
@@ -200,6 +221,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.4.0</version>
                 <configuration>
                     <additionalJOption>--add-exports=java.base/sun.security.x509=ALL-UNNAMED</additionalJOption>
                 </configuration>
