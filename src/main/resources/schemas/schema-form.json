@@ -1,6 +1,7 @@
 {
-  "type" : "object",
-  "id" : "urn:jsonschema:io:gravitee:policy:jws:configuration:JWSPolicyConfiguration",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
   "properties" : {
     "checkCertificateValidity" : {
       "title": "Check certificate validity",
