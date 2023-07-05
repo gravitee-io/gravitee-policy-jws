@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/gravitee-io/gravitee-policy-jws/compare/1.3.3...1.4.0) (2023-07-05)
+
+
+### Features
+
+* define execution phase ([0f573cb](https://github.com/gravitee-io/gravitee-policy-jws/commit/0f573cb2ce50a20b0ca808f2b47f1f22239be136))
+
 ## [1.3.3](https://github.com/gravitee-io/gravitee-policy-jws/compare/1.3.2...1.3.3) (2022-05-03)
 
 
