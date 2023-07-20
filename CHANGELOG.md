@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/gravitee-io/gravitee-policy-jws/compare/1.4.0...1.4.1) (2023-07-20)
+
+
+### Bug Fixes
+
+* update policy description ([f1d7b66](https://github.com/gravitee-io/gravitee-policy-jws/commit/f1d7b66f5e449db8e92f79b9b99fd74dd0e49874))
+
 # [1.4.0](https://github.com/gravitee-io/gravitee-policy-jws/compare/1.3.3...1.4.0) (2023-07-05)
 
 
