@@ -45,7 +45,6 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import org.apache.commons.io.IOUtils;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -407,11 +406,12 @@ public class JWSPolicyTest {
         return kf.generatePrivate(spec);
     }
 
-    private String loadResource(String resource) throws IOException {
-        InputStream is = this.getClass().getResourceAsStream(resource);
-        StringWriter sw = new StringWriter();
-        IOUtils.copy(is, sw, "UTF-8");
-        return sw.toString();
+    private String loadResource(String resource) {
+        try (InputStream is = this.getClass().getResourceAsStream(resource)) {
+            return new String(Objects.requireNonNull(is).readAllBytes(), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     private void encodeUInt32(int value, OutputStream out) throws IOException {
