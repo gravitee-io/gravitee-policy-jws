@@ -22,7 +22,6 @@ import io.gravitee.policy.api.PolicyConfiguration;
  * @author GraviteeSource Team
  */
 public class JWSPolicyConfiguration implements PolicyConfiguration {
-
     private boolean checkCertificateValidity = false;
 
     private boolean checkCertificateRevocation = false;

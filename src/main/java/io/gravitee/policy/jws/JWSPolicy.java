@@ -32,7 +32,6 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.impl.DefaultClaims;
 import java.io.*;
 import java.math.BigInteger;
-import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
@@ -50,17 +49,20 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.xml.bind.DatatypeConverter;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.DERIA5String;
+import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.x509.*;
+import org.bouncycastle.asn1.x509.Extension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
-import sun.security.x509.*;
 
 /**
- * @author Titouan COMPIEGNE (titouan.compiegne at graviteesource.com)
  * @author GraviteeSource Team
  */
 public class JWSPolicy {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(JWSPolicy.class);
     private static final String DEFAULT_KID = "default";
     private static final String PUBLIC_KEY_PROPERTY = "policy.jws.kid.%s";
@@ -123,7 +125,7 @@ public class JWSPolicy {
                 | IllegalArgumentException
                 | CertificateException ex
             ) {
-                LOGGER.error("Failed to decoding JWS token", ex);
+                LOGGER.error("Unable to decode JWS token. {}", ex.getMessage(), ex);
                 policyChain.streamFailWith(PolicyResult.failure(HttpStatusCode.UNAUTHORIZED_401, "Unauthorized"));
                 return null;
             } catch (Exception ex) {
@@ -206,6 +208,7 @@ public class JWSPolicy {
      */
     private SigningKeyResolver getSigningKeyResolverByGatewaySettings(ExecutionContext executionContext) {
         return new SigningKeyResolverAdapter() {
+
             @Override
             public Key resolveSigningKey(JwsHeader header, Claims claims) {
                 String keyId = header.getKeyId(); //or any other field that you need to inspect
@@ -239,29 +242,44 @@ public class JWSPolicy {
     public void validateCRLSFromCertificate(X509Certificate certificate, BigInteger serialNumber) throws CertificateException {
         X509CRLEntry revokedCertificate = null;
         X509CRL crl;
-        X509CertImpl x509Cert = (X509CertImpl) certificate;
-        CRLDistributionPointsExtension crlDistroExtension = x509Cert.getCRLDistributionPointsExtension();
-        if (crlDistroExtension != null) {
+        byte[] crlDistributionPointDerEncodedArray = certificate.getExtensionValue(Extension.cRLDistributionPoints.getId());
+
+        if (crlDistributionPointDerEncodedArray != null) {
             try {
-                ArrayList<DistributionPoint> distributionPoints = (ArrayList<DistributionPoint>) crlDistroExtension.get(
-                    CRLDistributionPointsExtension.POINTS
-                );
-                Iterator<DistributionPoint> iterator = distributionPoints.iterator();
+                ASN1InputStream oAsnInStream = new ASN1InputStream(new ByteArrayInputStream(crlDistributionPointDerEncodedArray));
+                ASN1Primitive derObjCrlDP = oAsnInStream.readObject();
+                DEROctetString dosCrlDP = (DEROctetString) derObjCrlDP;
+
+                oAsnInStream.close();
+
+                byte[] crldpExtOctets = dosCrlDP.getOctets();
+                ASN1InputStream oAsnInStream2 = new ASN1InputStream(new ByteArrayInputStream(crldpExtOctets));
+                ASN1Primitive derObj2 = oAsnInStream2.readObject();
+                CRLDistPoint distPoint = CRLDistPoint.getInstance(derObj2);
+
+                oAsnInStream2.close();
+
+                Iterator<DistributionPoint> iterator = Arrays.stream(distPoint.getDistributionPoints()).iterator();
                 boolean hasError = false;
                 while (iterator.hasNext()) {
                     if (revokedCertificate != null) {
                         break;
                     }
-                    GeneralNames distroName = iterator.next().getFullName();
-                    for (int i = 0; i < distroName.size(); ++i) {
+                    DistributionPointName dpn = iterator.next().getDistributionPoint();
+                    if (dpn.getType() != DistributionPointName.FULL_NAME) {
+                        // Look for only URIs in fullName
+                        continue;
+                    }
+
+                    for (GeneralName genName : GeneralNames.getInstance(dpn.getName()).getNames()) {
                         hasError = false;
                         if (revokedCertificate != null) {
                             break;
                         }
                         DataInputStream inStream = null;
                         try {
-                            URI uri = ((URIName) distroName.get(i).getName()).getURI();
-                            URL url = new URL(uri.toString());
+                            String urlString = DERIA5String.getInstance(genName.getName()).getString();
+                            URL url = new URL(urlString);
                             URLConnection connection = url.openConnection();
                             inStream = new DataInputStream(connection.getInputStream());
                             crl = (X509CRL) certificateFactory().generateCRL(inStream);

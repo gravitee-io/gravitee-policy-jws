@@ -28,13 +28,13 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.io.*;
 import java.math.BigInteger;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.*;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateCrtKey;
@@ -44,11 +44,9 @@ import java.security.spec.RSAPublicKeySpec;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -91,7 +89,6 @@ import org.springframework.core.env.Environment;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class JWSPolicyTest {
-
     private static final String KID = "MAIN";
     private static final String PUBLIC_KEY_PROPERTY = "policy.jws.kid.%s";
 
@@ -108,6 +105,15 @@ public class JWSPolicyTest {
 
     @Mock
     private JWSPolicyConfiguration configuration;
+
+    @BeforeClass
+    public static void setup() {
+        ConfigurableStreamHandlerFactory configurableStreamHandlerFactory = new ConfigurableStreamHandlerFactory(
+            "classpath",
+            new URLStreamHandler()
+        );
+        URL.setURLStreamHandlerFactory(configurableStreamHandlerFactory);
+    }
 
     @Before
     public void init() {
@@ -147,7 +153,7 @@ public class JWSPolicyTest {
         String input = getJsonWebToken("public_key.der", false, null);
 
         when(executionContext.getComponent(Environment.class)).thenReturn(environment);
-        when(environment.getProperty(String.format(PUBLIC_KEY_PROPERTY, KID))).thenReturn(getPemFilePath("full-server.pem"));
+        when(environment.getProperty(String.format(PUBLIC_KEY_PROPERTY, KID))).thenReturn(getAbsoluteFilePath("full-server.pem"));
 
         // Prepare context
         Buffer ret = jwsPolicy.map(executionContext, policyChain).apply(Buffer.buffer(input));
@@ -231,8 +237,7 @@ public class JWSPolicyTest {
     @Test
     public void shouldValidateCRL() throws Exception {
         CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
-        String pemPath = getPemFilePath("wikipedia.pem");
-        String fileContent = new String(Files.readAllBytes(Paths.get(pemPath)), Charset.forName(StandardCharsets.UTF_8.name()));
+        String fileContent = getFileContent("cert-with-crl/certs/server-valid.crt");
         X509Certificate cert = (X509Certificate) certificateFactory.generateCertificate(
             new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8))
         );
@@ -240,30 +245,13 @@ public class JWSPolicyTest {
     }
 
     @Test
-    @Ignore
     public void shouldValidateCRL_certificateException() throws Exception {
         CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
-        String pemPath = getPemFilePath("revoked.pem");
-        String fileContent = new String(Files.readAllBytes(Paths.get(pemPath)), Charset.forName(StandardCharsets.UTF_8.name()));
+
+        String fileContent = getFileContent("cert-with-crl/certs/server-revoked.crt");
         X509Certificate cert = (X509Certificate) certificateFactory.generateCertificate(
             new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8))
         );
-        /*
-         * WARNING:
-         * this test is based on a fake certificate from https://badssl.com/. (See also https://github.com/chromium/badssl.com)
-         * As this certificate will expire, it will need to be regenerated. Here is how to do it:
-         *  - go to src/test/resources/io/gravitee/policy/jws
-         *  - run the following command:
-         * echo | openssl s_client -connect revoked.badssl.com:443 | openssl x509 > revoked.pem
-         */
-        try {
-            cert.checkValidity();
-        } catch (CertificateExpiredException e) {
-            Assert.assertFalse(
-                "Certificate has expired. Consider generating a new one with the command:\n\techo | openssl s_client -connect revoked.badssl.com:443 | openssl x509 > revoked.pem",
-                true
-            );
-        }
 
         try {
             jwsPolicy.validateCRLSFromCertificate(cert, null);
@@ -280,7 +268,7 @@ public class JWSPolicyTest {
         when(executionContext.getComponent(Environment.class)).thenReturn(environment);
         when(configuration.isCheckCertificateValidity()).thenReturn(true);
         when(configuration.isCheckCertificateRevocation()).thenReturn(false);
-        when(environment.getProperty(String.format(PUBLIC_KEY_PROPERTY, KID))).thenReturn(getPemFilePath(pemFile));
+        when(environment.getProperty(String.format(PUBLIC_KEY_PROPERTY, KID))).thenReturn(getAbsoluteFilePath(pemFile));
 
         // Prepare context
         Buffer ret = jwsPolicy.map(executionContext, policyChain).apply(Buffer.buffer(input));
@@ -370,9 +358,14 @@ public class JWSPolicyTest {
         return new String[] { x5c };
     }
 
-    private String getPemFilePath(String pemFile) throws Exception {
-        File file = new File(this.getClass().getResource(pemFile).toURI());
+    private String getAbsoluteFilePath(String filePath) throws Exception {
+        File file = new File(Objects.requireNonNull(this.getClass().getResource(filePath)).toURI());
         return file.getAbsolutePath();
+    }
+
+    private String getFileContent(String filePath) throws Exception {
+        File file = new File(Objects.requireNonNull(this.getClass().getResource(filePath)).toURI());
+        return Files.readString(Paths.get(file.getAbsolutePath()), StandardCharsets.UTF_8);
     }
 
     /**

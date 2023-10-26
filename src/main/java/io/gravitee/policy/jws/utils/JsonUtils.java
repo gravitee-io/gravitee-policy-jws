@@ -23,7 +23,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author GraviteeSource Team
  */
 public class JsonUtils {
-
     private static final ObjectMapper mapper = new ObjectMapper();
 
     public static String writeValueAsString(Object value) {
