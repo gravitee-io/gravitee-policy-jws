@@ -22,7 +22,7 @@
 
     <groupId>io.gravitee.policy</groupId>
     <artifactId>gravitee-policy-jws</artifactId>
-    <version>1.5.0</version>
+    <version>1.5.1</version>
 
     <name>Gravitee.io APIM - Policy - JWS</name>
     <description>Validate the JWS token signature, certificate information and expiration date before sending the API call to the target backend</description>
