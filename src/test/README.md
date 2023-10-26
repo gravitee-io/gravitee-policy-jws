@@ -1,0 +1,1 @@
+Tests rely on generated keys and certificates, to regenerate them, please refer to the [dedicated documentation](./resources/io/gravitee/policy/jws/cert-with-crl/README.md).
