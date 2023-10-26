@@ -45,7 +45,7 @@
         <jaxb-api.version>2.3.1</jaxb-api.version>
 
         <maven-assembly-plugin.version>2.5.5</maven-assembly-plugin.version>
-        <prettier-maven-plugin.version>0.19</prettier-maven-plugin.version>
+        <prettier-maven-plugin.version>0.21</prettier-maven-plugin.version>
         <publish-folder-path>graviteeio-apim/plugins/policies</publish-folder-path>
     </properties>
 
