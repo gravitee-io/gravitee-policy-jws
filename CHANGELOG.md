@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/gravitee-io/gravitee-policy-jws/compare/1.4.1...1.5.0) (2023-10-26)
+
+
+### Features
+
+* remove use of `sun.security.x509.*` to support Java 17 ([98cb397](https://github.com/gravitee-io/gravitee-policy-jws/commit/98cb3975beacda6e65dc6acec6145ecc3d76bd51))
+
 ## [1.4.1](https://github.com/gravitee-io/gravitee-policy-jws/compare/1.4.0...1.4.1) (2023-07-20)
 
 
