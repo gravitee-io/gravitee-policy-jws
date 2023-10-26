@@ -42,7 +42,7 @@
         <jjwt.version>0.9.1</jjwt.version>
         <bcprov-jdk15on.version>1.70</bcprov-jdk15on.version>
         <jsonassert.version>1.4.0</jsonassert.version>
-        <jaxb-api.version>2.3.0</jaxb-api.version>
+        <jaxb-api.version>2.3.1</jaxb-api.version>
 
         <maven-assembly-plugin.version>2.5.5</maven-assembly-plugin.version>
         <prettier-maven-plugin.version>0.19</prettier-maven-plugin.version>
