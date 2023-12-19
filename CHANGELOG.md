@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/gravitee-io/gravitee-policy-jws/compare/1.5.1...1.6.0) (2023-12-19)
+
+
+### Features
+
+* enable policy on REQUEST phase for message APIs ([4e3d250](https://github.com/gravitee-io/gravitee-policy-jws/commit/4e3d25028450009adf15f1d68551c621d27d94ae)), closes [gravitee-io/issues#9430](https://github.com/gravitee-io/issues/issues/9430)
+
 ## [1.5.1](https://github.com/gravitee-io/gravitee-policy-jws/compare/1.5.0...1.5.1) (2023-10-26)
 
 
