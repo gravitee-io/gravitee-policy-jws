@@ -40,7 +40,7 @@
         <gravitee-policy-api.version>1.11.0</gravitee-policy-api.version>
         <gravitee-common.version>2.3.0</gravitee-common.version>
         <jjwt.version>0.9.1</jjwt.version>
-        <bcprov-jdk15on.version>1.70</bcprov-jdk15on.version>
+        <bcprov-jdk18on.version>1.77</bcprov-jdk18on.version>
         <jsonassert.version>1.5.1</jsonassert.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
 
@@ -109,8 +109,8 @@
         <!-- Bouncycastle dependencies -->
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
-            <version>${bcprov-jdk15on.version}</version>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>${bcprov-jdk18on.version}</version>
             <scope>compile</scope>
         </dependency>
 
