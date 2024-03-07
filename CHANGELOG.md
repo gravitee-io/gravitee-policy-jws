@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/gravitee-io/gravitee-policy-jws/compare/1.6.0...1.6.1) (2024-03-07)
+
+
+### Bug Fixes
+
+* **deps:** update bcprov-jdk15on to bcprov-jdk18on ([87f8dae](https://github.com/gravitee-io/gravitee-policy-jws/commit/87f8dae3b46263963a545141b7b953e516b91082))
+
 # [1.6.0](https://github.com/gravitee-io/gravitee-policy-jws/compare/1.5.1...1.6.0) (2023-12-19)
 
 
