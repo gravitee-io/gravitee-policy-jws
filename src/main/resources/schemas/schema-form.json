@@ -1,19 +1,19 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "additionalProperties": false,
-  "properties" : {
-    "checkCertificateValidity" : {
-      "title": "Check certificate validity",
-      "description": "Check if the certificate used to sign the JWT is valid with correct 'not_before' and 'not_after' dates.",
-      "type" : "boolean",
-      "default": false
-    },
-    "checkCertificateRevocation" : {
-      "title": "Check if the certificate is revoked",
-      "description": "Check if the certificate used to sign the JWT is not revoked via the CRL Distribution Points. The CRL is stored inside the X509v3 CRL Distribution Extension Points.",
-      "type" : "boolean",
-      "default": false
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "checkCertificateValidity": {
+            "title": "Check certificate validity",
+            "description": "Check if the certificate used to sign the JWT is valid with correct 'not_before' and 'not_after' dates.",
+            "type": "boolean",
+            "default": false
+        },
+        "checkCertificateRevocation": {
+            "title": "Check if the certificate is revoked",
+            "description": "Check if the certificate used to sign the JWT is not revoked via the CRL Distribution Points. The CRL is stored inside the X509v3 CRL Distribution Extension Points.",
+            "type": "boolean",
+            "default": false
+        }
     }
-  }
 }

@@ -54,6 +54,7 @@ import org.slf4j.LoggerFactory;
 @GatewayTest
 @DeployApi({ "/apis/v3/jws.json", "/apis/v3/jws-checkCertificateRevocation.json" })
 public class JWSPolicyIntegrationTest extends AbstractPolicyTest<JWSPolicy, JWSPolicyConfiguration> {
+
     private static final String KID = "MAIN";
 
     private ListAppender<ILoggingEvent> listAppender;
@@ -102,32 +103,28 @@ public class JWSPolicyIntegrationTest extends AbstractPolicyTest<JWSPolicy, JWSP
         client
             .rxRequest(POST, "/test")
             .flatMap(request -> request.rxSend(Buffer.buffer("malformedJWS")))
-            .flatMapPublisher(
-                response -> {
-                    assertThat(response.statusCode()).isEqualTo(401);
-                    return response.body().toFlowable();
-                }
-            )
+            .flatMapPublisher(response -> {
+                assertThat(response.statusCode()).isEqualTo(401);
+                return response.body().toFlowable();
+            })
             .test()
             .awaitDone(30, TimeUnit.SECONDS)
             .assertComplete()
-            .assertValue(
-                body -> {
-                    assertThat(body).hasToString("Unauthorized");
+            .assertValue(body -> {
+                assertThat(body).hasToString("Unauthorized");
 
-                    final List<ILoggingEvent> logList = listAppender.list;
-                    assertThat(logList)
-                        .hasSize(1)
-                        .element(0)
-                        .extracting(ILoggingEvent::getFormattedMessage, ILoggingEvent::getLevel)
-                        .containsExactly(
-                            "Unable to decode JWS token. JWT strings must contain exactly 2 period characters. Found: 0",
-                            Level.ERROR
-                        );
+                final List<ILoggingEvent> logList = listAppender.list;
+                assertThat(logList)
+                    .hasSize(1)
+                    .element(0)
+                    .extracting(ILoggingEvent::getFormattedMessage, ILoggingEvent::getLevel)
+                    .containsExactly(
+                        "Unable to decode JWS token. JWT strings must contain exactly 2 period characters. Found: 0",
+                        Level.ERROR
+                    );
 
-                    return true;
-                }
-            )
+                return true;
+            })
             .assertNoErrors();
     }
 
@@ -142,32 +139,28 @@ public class JWSPolicyIntegrationTest extends AbstractPolicyTest<JWSPolicy, JWSP
         client
             .rxRequest(POST, "/test")
             .flatMap(request -> request.rxSend(Buffer.buffer(input)))
-            .flatMapPublisher(
-                response -> {
-                    assertThat(response.statusCode()).isEqualTo(401);
-                    return response.body().toFlowable();
-                }
-            )
+            .flatMapPublisher(response -> {
+                assertThat(response.statusCode()).isEqualTo(401);
+                return response.body().toFlowable();
+            })
             .test()
             .awaitDone(30, TimeUnit.SECONDS)
             .assertComplete()
-            .assertValue(
-                body -> {
-                    assertThat(body).hasToString("Unauthorized");
+            .assertValue(body -> {
+                assertThat(body).hasToString("Unauthorized");
 
-                    final List<ILoggingEvent> logList = listAppender.list;
-                    assertThat(logList)
-                        .hasSize(1)
-                        .element(0)
-                        .extracting(ILoggingEvent::getFormattedMessage, ILoggingEvent::getLevel)
-                        .containsExactly(
-                            "Unable to decode JWS token. Certificate public key modulus is different compare to the given public key modulus",
-                            Level.ERROR
-                        );
+                final List<ILoggingEvent> logList = listAppender.list;
+                assertThat(logList)
+                    .hasSize(1)
+                    .element(0)
+                    .extracting(ILoggingEvent::getFormattedMessage, ILoggingEvent::getLevel)
+                    .containsExactly(
+                        "Unable to decode JWS token. Certificate public key modulus is different compare to the given public key modulus",
+                        Level.ERROR
+                    );
 
-                    return true;
-                }
-            )
+                return true;
+            })
             .assertNoErrors();
     }
 
@@ -182,32 +175,28 @@ public class JWSPolicyIntegrationTest extends AbstractPolicyTest<JWSPolicy, JWSP
         client
             .rxRequest(POST, "/test")
             .flatMap(request -> request.rxSend(Buffer.buffer(input)))
-            .flatMapPublisher(
-                response -> {
-                    assertThat(response.statusCode()).isEqualTo(401);
-                    return response.body().toFlowable();
-                }
-            )
+            .flatMapPublisher(response -> {
+                assertThat(response.statusCode()).isEqualTo(401);
+                return response.body().toFlowable();
+            })
             .test()
             .awaitDone(30, TimeUnit.SECONDS)
             .assertComplete()
-            .assertValue(
-                body -> {
-                    assertThat(body).hasToString("Unauthorized");
+            .assertValue(body -> {
+                assertThat(body).hasToString("Unauthorized");
 
-                    final List<ILoggingEvent> logList = listAppender.list;
-                    assertThat(logList)
-                        .hasSize(1)
-                        .element(0)
-                        .extracting(ILoggingEvent::getFormattedMessage, ILoggingEvent::getLevel)
-                        .containsExactly(
-                            "Unable to decode JWS token. JWT signature does not match locally computed signature. JWT validity cannot be asserted and should not be trusted.",
-                            Level.ERROR
-                        );
+                final List<ILoggingEvent> logList = listAppender.list;
+                assertThat(logList)
+                    .hasSize(1)
+                    .element(0)
+                    .extracting(ILoggingEvent::getFormattedMessage, ILoggingEvent::getLevel)
+                    .containsExactly(
+                        "Unable to decode JWS token. JWT signature does not match locally computed signature. JWT validity cannot be asserted and should not be trusted.",
+                        Level.ERROR
+                    );
 
-                    return true;
-                }
-            )
+                return true;
+            })
             .assertNoErrors();
     }
 
@@ -224,21 +213,17 @@ public class JWSPolicyIntegrationTest extends AbstractPolicyTest<JWSPolicy, JWSP
         client
             .rxRequest(POST, "/test")
             .flatMap(request -> request.rxSend(Buffer.buffer(input)))
-            .flatMapPublisher(
-                response -> {
-                    assertThat(response.statusCode()).isEqualTo(200);
-                    return response.body().toFlowable();
-                }
-            )
+            .flatMapPublisher(response -> {
+                assertThat(response.statusCode()).isEqualTo(200);
+                return response.body().toFlowable();
+            })
             .test()
             .awaitDone(30, TimeUnit.SECONDS)
             .assertComplete()
-            .assertValue(
-                body -> {
-                    assertThat(body).hasToString("Response from backend");
-                    return true;
-                }
-            )
+            .assertValue(body -> {
+                assertThat(body).hasToString("Response from backend");
+                return true;
+            })
             .assertNoErrors();
     }
 
@@ -252,30 +237,26 @@ public class JWSPolicyIntegrationTest extends AbstractPolicyTest<JWSPolicy, JWSP
         client
             .rxRequest(POST, "/test")
             .flatMap(request -> request.rxSend(Buffer.buffer(input)))
-            .flatMapPublisher(
-                response -> {
-                    assertThat(response.statusCode()).isEqualTo(401);
-                    return response.body().toFlowable();
-                }
-            )
+            .flatMapPublisher(response -> {
+                assertThat(response.statusCode()).isEqualTo(401);
+                return response.body().toFlowable();
+            })
             .test()
             .awaitDone(30, TimeUnit.SECONDS)
             .assertComplete()
-            .assertValue(
-                body -> {
-                    assertThat(body).hasToString("Unauthorized");
+            .assertValue(body -> {
+                assertThat(body).hasToString("Unauthorized");
 
-                    final List<ILoggingEvent> logList = listAppender.list;
-                    assertThat(logList)
-                        .hasSize(1)
-                        .element(0)
-                        .extracting(ILoggingEvent::getFormattedMessage, ILoggingEvent::getLevel)
-                        // Note: Depending on the timezone, the date can be different
-                        .anyMatch(l -> ((String) l).matches("Unable to decode JWS token. NotAfter: Fri Jan 01 .*"))
-                        .contains(Level.ERROR);
-                    return true;
-                }
-            )
+                final List<ILoggingEvent> logList = listAppender.list;
+                assertThat(logList)
+                    .hasSize(1)
+                    .element(0)
+                    .extracting(ILoggingEvent::getFormattedMessage, ILoggingEvent::getLevel)
+                    // Note: Depending on the timezone, the date can be different
+                    .anyMatch(l -> ((String) l).matches("Unable to decode JWS token. NotAfter: Fri Jan 01 .*"))
+                    .contains(Level.ERROR);
+                return true;
+            })
             .assertNoErrors();
     }
 
@@ -291,21 +272,17 @@ public class JWSPolicyIntegrationTest extends AbstractPolicyTest<JWSPolicy, JWSP
         client
             .rxRequest(POST, "/test-checkCertificateRevocation")
             .flatMap(request -> request.rxSend(Buffer.buffer(input)))
-            .flatMapPublisher(
-                response -> {
-                    assertThat(response.statusCode()).isEqualTo(200);
-                    return response.body().toFlowable();
-                }
-            )
+            .flatMapPublisher(response -> {
+                assertThat(response.statusCode()).isEqualTo(200);
+                return response.body().toFlowable();
+            })
             .test()
             .awaitDone(30, TimeUnit.SECONDS)
             .assertComplete()
-            .assertValue(
-                body -> {
-                    assertThat(body).hasToString("Response from backend");
-                    return true;
-                }
-            )
+            .assertValue(body -> {
+                assertThat(body).hasToString("Response from backend");
+                return true;
+            })
             .assertNoErrors();
     }
 
@@ -319,29 +296,25 @@ public class JWSPolicyIntegrationTest extends AbstractPolicyTest<JWSPolicy, JWSP
         client
             .rxRequest(POST, "/test-checkCertificateRevocation")
             .flatMap(request -> request.rxSend(Buffer.buffer(input)))
-            .flatMapPublisher(
-                response -> {
-                    assertThat(response.statusCode()).isEqualTo(401);
-                    return response.body().toFlowable();
-                }
-            )
+            .flatMapPublisher(response -> {
+                assertThat(response.statusCode()).isEqualTo(401);
+                return response.body().toFlowable();
+            })
             .test()
             .awaitDone(30, TimeUnit.SECONDS)
             .assertComplete()
-            .assertValue(
-                body -> {
-                    assertThat(body).hasToString("Unauthorized");
+            .assertValue(body -> {
+                assertThat(body).hasToString("Unauthorized");
 
-                    final List<ILoggingEvent> logList = listAppender.list;
-                    assertThat(logList)
-                        .hasSize(1)
-                        .element(0)
-                        .extracting(ILoggingEvent::getFormattedMessage, ILoggingEvent::getLevel)
-                        .containsExactly("Unable to decode JWS token. Certificate has been revoked", Level.ERROR);
+                final List<ILoggingEvent> logList = listAppender.list;
+                assertThat(logList)
+                    .hasSize(1)
+                    .element(0)
+                    .extracting(ILoggingEvent::getFormattedMessage, ILoggingEvent::getLevel)
+                    .containsExactly("Unable to decode JWS token. Certificate has been revoked", Level.ERROR);
 
-                    return true;
-                }
-            )
+                return true;
+            })
             .assertNoErrors();
     }
 

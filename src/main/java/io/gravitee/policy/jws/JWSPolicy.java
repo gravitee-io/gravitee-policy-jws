@@ -63,6 +63,7 @@ import org.springframework.core.env.Environment;
  * @author GraviteeSource Team
  */
 public class JWSPolicy {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(JWSPolicy.class);
     private static final String DEFAULT_KID = "default";
     private static final String PUBLIC_KEY_PROPERTY = "policy.jws.kid.%s";
@@ -208,7 +209,6 @@ public class JWSPolicy {
      */
     private SigningKeyResolver getSigningKeyResolverByGatewaySettings(ExecutionContext executionContext) {
         return new SigningKeyResolverAdapter() {
-
             @Override
             public Key resolveSigningKey(JwsHeader header, Claims claims) {
                 String keyId = header.getKeyId(); //or any other field that you need to inspect
