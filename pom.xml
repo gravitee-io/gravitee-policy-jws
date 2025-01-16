@@ -30,7 +30,7 @@
     <parent>
         <groupId>io.gravitee</groupId>
         <artifactId>gravitee-parent</artifactId>
-        <version>20.5</version>
+        <version>22.2.4</version>
     </parent>
 
     <properties>
@@ -45,7 +45,6 @@
         <jaxb-api.version>2.3.1</jaxb-api.version>
 
         <maven-assembly-plugin.version>2.5.5</maven-assembly-plugin.version>
-        <prettier-maven-plugin.version>0.22</prettier-maven-plugin.version>
         <publish-folder-path>graviteeio-apim/plugins/policies</publish-folder-path>
     </properties>
 
@@ -206,11 +205,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>com.hubspot.maven.plugins</groupId>
-                <artifactId>prettier-maven-plugin</artifactId>
-                <version>${prettier-maven-plugin.version}</version>
             </plugin>
         </plugins>
     </build>
