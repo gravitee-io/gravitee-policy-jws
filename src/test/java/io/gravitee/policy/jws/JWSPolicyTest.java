@@ -29,7 +29,6 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -88,6 +87,7 @@ import org.springframework.core.env.Environment;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class JWSPolicyTest {
+
     private static final String KID = "MAIN";
     private static final String PUBLIC_KEY_PROPERTY = "policy.jws.kid.%s";
 

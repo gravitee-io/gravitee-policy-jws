@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 class ConfigurableStreamHandlerFactory implements URLStreamHandlerFactory {
+
     private final Map<String, URLStreamHandler> protocolHandlers;
 
     public ConfigurableStreamHandlerFactory(String protocol, URLStreamHandler urlHandler) {

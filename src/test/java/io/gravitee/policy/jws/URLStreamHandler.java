@@ -21,6 +21,7 @@ import java.net.URLConnection;
 
 /** A {@link java.net.URLStreamHandler} that handles resources on the classpath. */
 public class URLStreamHandler extends java.net.URLStreamHandler {
+
     /** The classloader to find resources from. */
     private final ClassLoader classLoader;
 
