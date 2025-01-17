@@ -15,7 +15,9 @@
  */
 package io.gravitee.policy.jws;
 
-import static org.mockito.Matchers.any;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 import io.gravitee.gateway.api.ExecutionContext;
@@ -44,11 +46,13 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import org.junit.*;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.core.env.Environment;
 
@@ -85,7 +89,7 @@ import org.springframework.core.env.Environment;
  * openssl x509 -text -in server.pem
  *
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class JWSPolicyTest {
 
     private static final String KID = "MAIN";
@@ -105,7 +109,7 @@ public class JWSPolicyTest {
     @Mock
     private JWSPolicyConfiguration configuration;
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() {
         ConfigurableStreamHandlerFactory configurableStreamHandlerFactory = new ConfigurableStreamHandlerFactory(
             "classpath",
@@ -114,7 +118,7 @@ public class JWSPolicyTest {
         URL.setURLStreamHandlerFactory(configurableStreamHandlerFactory);
     }
 
-    @Before
+    @BeforeEach
     public void init() {
         MockitoAnnotations.initMocks(this);
         jwsPolicy = new JWSPolicy(configuration);
@@ -132,7 +136,7 @@ public class JWSPolicyTest {
 
         // Prepare context
         Buffer ret = jwsPolicy.map(executionContext, policyChain).apply(Buffer.buffer(input));
-        Assert.assertNotNull(ret);
+        assertThat(ret).isNotNull();
 
         JSONAssert.assertEquals(expected, ret.toString(), false);
     }
@@ -157,7 +161,7 @@ public class JWSPolicyTest {
         // Prepare context
         Buffer ret = jwsPolicy.map(executionContext, policyChain).apply(Buffer.buffer(input));
         verify(policyChain, times(1)).streamFailWith(any());
-        Assert.assertNull(ret);
+        assertThat(ret).isNull();
     }
 
     @Test
@@ -167,7 +171,7 @@ public class JWSPolicyTest {
         // Prepare context
         Buffer ret = jwsPolicy.map(executionContext, policyChain).apply(Buffer.buffer(input));
         verify(policyChain, times(1)).streamFailWith(any());
-        Assert.assertNull(ret);
+        assertThat(ret).isNull();
     }
 
     @Test
@@ -180,7 +184,7 @@ public class JWSPolicyTest {
         // Prepare context
         Buffer ret = jwsPolicy.map(executionContext, policyChain).apply(Buffer.buffer(input));
         verify(policyChain, times(1)).streamFailWith(any());
-        Assert.assertNull(ret);
+        assertThat(ret).isNull();
     }
 
     @Test
@@ -195,7 +199,7 @@ public class JWSPolicyTest {
         // Prepare context
         Buffer ret = jwsPolicy.map(executionContext, policyChain).apply(Buffer.buffer(input));
         verify(policyChain, times(1)).streamFailWith(any());
-        Assert.assertNull(ret);
+        assertThat(ret).isNull();
     }
 
     @Test
@@ -210,7 +214,7 @@ public class JWSPolicyTest {
         // Prepare context
         Buffer ret = jwsPolicy.map(executionContext, policyChain).apply(Buffer.buffer(input));
         verify(policyChain, times(1)).streamFailWith(any());
-        Assert.assertNull(ret);
+        assertThat(ret).isNull();
     }
 
     @Test
@@ -228,7 +232,7 @@ public class JWSPolicyTest {
 
         // Prepare context
         Buffer ret = jwsPolicy.map(executionContext, policyChain).apply(Buffer.buffer(input));
-        Assert.assertNotNull(ret);
+        assertThat(ret).isNotNull();
 
         JSONAssert.assertEquals(expected, ret.toString(), false);
     }
@@ -252,12 +256,11 @@ public class JWSPolicyTest {
             new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8))
         );
 
-        try {
-            jwsPolicy.validateCRLSFromCertificate(cert, null);
-            Assert.assertFalse("Certificate should not be valid", true);
-        } catch (CertificateException e) {
-            Assert.assertTrue(true);
-        }
+        Exception exception = assertThrows(CertificateException.class, () -> jwsPolicy.validateCRLSFromCertificate(cert, null));
+        String expectedMessage = "Certificate has been revoked";
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage));
     }
 
     private void shouldTransformInput_validX5CHeader_withPemFile(String pemFile) throws Exception {
@@ -271,7 +274,7 @@ public class JWSPolicyTest {
 
         // Prepare context
         Buffer ret = jwsPolicy.map(executionContext, policyChain).apply(Buffer.buffer(input));
-        Assert.assertNotNull(ret);
+        assertThat(ret).isNotNull();
 
         JSONAssert.assertEquals(expected, ret.toString(), false);
     }
