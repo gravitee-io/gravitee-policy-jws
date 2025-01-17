@@ -34,10 +34,8 @@
     </parent>
 
     <properties>
-        <gravitee-bom.version>8.1.0</gravitee-bom.version>
-        <gravitee-apim.version>3.20.32</gravitee-apim.version>
-        <gravitee-gateway-api.version>3.8.1</gravitee-gateway-api.version>
-        <gravitee-policy-api.version>1.11.0</gravitee-policy-api.version>
+        <gravitee-apim.version>4.6.0-alpha.3</gravitee-apim.version>
+        <gravitee-reactor-message.version>5.0.0</gravitee-reactor-message.version>
         <gravitee-common.version>2.3.0</gravitee-common.version>
         <jjwt.version>0.9.1</jjwt.version>
         <bcprov-jdk18on.version>1.78</bcprov-jdk18on.version>
@@ -52,9 +50,9 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>io.gravitee</groupId>
-                <artifactId>gravitee-bom</artifactId>
-                <version>${gravitee-bom.version}</version>
+                <groupId>io.gravitee.apim</groupId>
+                <artifactId>gravitee-apim-bom</artifactId>
+                <version>${gravitee-apim.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -67,21 +65,18 @@
         <dependency>
             <groupId>io.gravitee.gateway</groupId>
             <artifactId>gravitee-gateway-api</artifactId>
-            <version>${gravitee-gateway-api.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>io.gravitee.policy</groupId>
             <artifactId>gravitee-policy-api</artifactId>
-            <version>${gravitee-policy-api.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>io.gravitee.common</groupId>
             <artifactId>gravitee-common</artifactId>
-            <version>${gravitee-common.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -161,6 +156,13 @@
             <groupId>io.gravitee.apim.gateway</groupId>
             <artifactId>gravitee-apim-gateway-tests-sdk</artifactId>
             <version>${gravitee-apim.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.graviteesource.reactor</groupId>
+            <artifactId>gravitee-reactor-message</artifactId>
+            <version>${gravitee-reactor-message.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

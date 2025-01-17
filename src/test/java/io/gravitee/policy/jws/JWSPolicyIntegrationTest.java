@@ -27,7 +27,6 @@ import io.gravitee.apim.gateway.tests.sdk.AbstractPolicyTest;
 import io.gravitee.apim.gateway.tests.sdk.annotations.DeployApi;
 import io.gravitee.apim.gateway.tests.sdk.annotations.GatewayTest;
 import io.gravitee.apim.gateway.tests.sdk.configuration.GatewayConfigurationBuilder;
-import io.gravitee.definition.model.Api;
 import io.gravitee.definition.model.ExecutionMode;
 import io.gravitee.policy.jws.configuration.JWSPolicyConfiguration;
 import io.jsonwebtoken.JwtBuilder;
@@ -51,7 +50,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
-@GatewayTest
+@GatewayTest(v2ExecutionMode = ExecutionMode.V4_EMULATION_ENGINE)
 @DeployApi({ "/apis/v3/jws.json", "/apis/v3/jws-checkCertificateRevocation.json" })
 public class JWSPolicyIntegrationTest extends AbstractPolicyTest<JWSPolicy, JWSPolicyConfiguration> {
 
@@ -67,11 +66,6 @@ public class JWSPolicyIntegrationTest extends AbstractPolicyTest<JWSPolicy, JWSP
             "policy.jws.kid." + KID,
             loadResource("/io/gravitee/policy/jws/cert-with-crl/certs/server.SSH-pub-key.pub").replaceAll("\n", "") + " test@test.com"
         );
-    }
-
-    @Override
-    public void configureApi(Api api) {
-        api.setExecutionMode(ExecutionMode.JUPITER);
     }
 
     @BeforeAll
