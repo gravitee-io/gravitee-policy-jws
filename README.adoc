@@ -8,19 +8,45 @@ image:https://circleci.com/gh/gravitee-io/gravitee-policy-jws.svg?style=svg["Cir
 endif::[]
 
 == Phase
-    
-|===
-|onRequest |onResponse
 
-| X
-|
+=== V3 Engine
+
+[cols="4*", options="header"]
+|===
+^|onRequest
+^|onResponse
+^|onRequestContent
+^|onResponseContent
+
+^.^| -
+^.^| -
+^.^| X
+^.^| -
+
+|===
+
+=== V4 engine
+
+[cols="4*", options="header"]
+|===
+^|onRequest
+^|onResponse
+^|onMessageRequest
+^|onMessageResponse
+
+^.^| X
+^.^| -
+^.^| -
+^.^| -
+
 |===
 
 == Compatibility with APIM
 
 |===
 | Plugin version | APIM version
-| 1.x            | All supported versions
+| 1.x            | Up to 4.5.x
+| 2.x            | 4.6.x to latest
 |===
 
 == Description

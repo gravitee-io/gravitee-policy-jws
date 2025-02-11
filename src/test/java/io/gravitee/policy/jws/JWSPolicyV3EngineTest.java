@@ -18,23 +18,40 @@ package io.gravitee.policy.jws;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.gravitee.gateway.api.ExecutionContext;
 import io.gravitee.gateway.api.buffer.Buffer;
 import io.gravitee.policy.api.PolicyChain;
 import io.gravitee.policy.jws.configuration.JWSPolicyConfiguration;
+import io.gravitee.policy.jws.handler.ConfigurableStreamHandlerFactory;
+import io.gravitee.policy.jws.handler.URLStreamHandler;
 import io.gravitee.policy.jws.utils.JwsHeader;
+import io.gravitee.policy.jws.v3.JWSPolicyV3;
+import io.gravitee.policy.jws.validator.CRLValidator;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.*;
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -51,7 +68,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.core.env.Environment;
@@ -59,43 +75,42 @@ import org.springframework.core.env.Environment;
 /**
  * @author Titouan COMPIEGNE (titouan.compiegne at graviteesource.com)
  * @author GraviteeSource Team
- *
+ * <p>
  * Working with JKS file
- *
+ * <p>
  * How to generate JKS KeyStore File
- *
+ * <p>
  * keytool -genkeypair \
- *  -alias mytestkey \
- *  -keyalg RSA \
- *  -dname "CN=Web Server,OU=Unit,O=Organization,L=City,S=State,C=US" \
- *  -keypass changeme \
- *  -keystore server.jks \
- *  -storepass letmein \
- *
+ * -alias mytestkey \
+ * -keyalg RSA \
+ * -dname "CN=Web Server,OU=Unit,O=Organization,L=City,S=State,C=US" \
+ * -keypass changeme \
+ * -keystore server.jks \
+ * -storepass letmein \
+ * <p>
  * Export Public Key certificate DER format
  * keytool -exportcert -alias mytestkey -file public_key.der -keystore server.jks
- *
+ * <p>
  * Export PEM Public certificate
  * keytool -exportcert -rfc -file server.pem -keystore server.jks -alias mytestkey
- *
+ * <p>
  * Export Full PEM certificate
  * keytool -importkeystore -srckeystore server.jks \
  * -destkeystore server.p12 \
  * -srcstoretype jks \
  * -deststoretype pkcs12
  * openssl pkcs12 -in server.p12 -out server.pem
- *
+ * <p>
  * Get PEM information
  * openssl x509 -text -in server.pem
- *
  */
 @ExtendWith(MockitoExtension.class)
-public class JWSPolicyTest {
+public class JWSPolicyV3EngineTest {
 
     private static final String KID = "MAIN";
     private static final String PUBLIC_KEY_PROPERTY = "policy.jws.kid.%s";
 
-    private JWSPolicy jwsPolicy;
+    private JWSPolicyV3 jwsPolicyV3;
 
     @Mock
     private PolicyChain policyChain;
@@ -111,17 +126,17 @@ public class JWSPolicyTest {
 
     @BeforeAll
     public static void setup() {
-        ConfigurableStreamHandlerFactory configurableStreamHandlerFactory = new ConfigurableStreamHandlerFactory(
+        // enable classpath URL
+        ConfigurableStreamHandlerFactory configurableStreamHandlerFactory = ConfigurableStreamHandlerFactory.getInstance(
             "classpath",
             new URLStreamHandler()
         );
-        URL.setURLStreamHandlerFactory(configurableStreamHandlerFactory);
+        configurableStreamHandlerFactory.setURLStreamHandlerFactory();
     }
 
     @BeforeEach
     public void init() {
-        MockitoAnnotations.initMocks(this);
-        jwsPolicy = new JWSPolicy(configuration);
+        jwsPolicyV3 = new JWSPolicyV3(configuration);
     }
 
     @Test
@@ -135,7 +150,7 @@ public class JWSPolicyTest {
         when(environment.getProperty(String.format(PUBLIC_KEY_PROPERTY, KID))).thenReturn(getPublicKey());
 
         // Prepare context
-        Buffer ret = jwsPolicy.map(executionContext, policyChain).apply(Buffer.buffer(input));
+        Buffer ret = jwsPolicyV3.map(executionContext, policyChain).apply(Buffer.buffer(input));
         assertThat(ret).isNotNull();
 
         JSONAssert.assertEquals(expected, ret.toString(), false);
@@ -159,7 +174,7 @@ public class JWSPolicyTest {
         when(environment.getProperty(String.format(PUBLIC_KEY_PROPERTY, KID))).thenReturn(getAbsoluteFilePath("full-server.pem"));
 
         // Prepare context
-        Buffer ret = jwsPolicy.map(executionContext, policyChain).apply(Buffer.buffer(input));
+        Buffer ret = jwsPolicyV3.map(executionContext, policyChain).apply(Buffer.buffer(input));
         verify(policyChain, times(1)).streamFailWith(any());
         assertThat(ret).isNull();
     }
@@ -169,7 +184,7 @@ public class JWSPolicyTest {
         String input = loadResource("/io/gravitee/policy/jws/malformed-jws.json");
 
         // Prepare context
-        Buffer ret = jwsPolicy.map(executionContext, policyChain).apply(Buffer.buffer(input));
+        Buffer ret = jwsPolicyV3.map(executionContext, policyChain).apply(Buffer.buffer(input));
         verify(policyChain, times(1)).streamFailWith(any());
         assertThat(ret).isNull();
     }
@@ -182,7 +197,7 @@ public class JWSPolicyTest {
         when(environment.getProperty(String.format(PUBLIC_KEY_PROPERTY, KID))).thenReturn(getPublicKey());
 
         // Prepare context
-        Buffer ret = jwsPolicy.map(executionContext, policyChain).apply(Buffer.buffer(input));
+        Buffer ret = jwsPolicyV3.map(executionContext, policyChain).apply(Buffer.buffer(input));
         verify(policyChain, times(1)).streamFailWith(any());
         assertThat(ret).isNull();
     }
@@ -197,7 +212,7 @@ public class JWSPolicyTest {
         when(environment.getProperty(String.format(PUBLIC_KEY_PROPERTY, KID))).thenReturn(getPublicKey());
 
         // Prepare context
-        Buffer ret = jwsPolicy.map(executionContext, policyChain).apply(Buffer.buffer(input));
+        Buffer ret = jwsPolicyV3.map(executionContext, policyChain).apply(Buffer.buffer(input));
         verify(policyChain, times(1)).streamFailWith(any());
         assertThat(ret).isNull();
     }
@@ -212,7 +227,7 @@ public class JWSPolicyTest {
         when(environment.getProperty(String.format(PUBLIC_KEY_PROPERTY, KID))).thenReturn(getPublicKey());
 
         // Prepare context
-        Buffer ret = jwsPolicy.map(executionContext, policyChain).apply(Buffer.buffer(input));
+        Buffer ret = jwsPolicyV3.map(executionContext, policyChain).apply(Buffer.buffer(input));
         verify(policyChain, times(1)).streamFailWith(any());
         assertThat(ret).isNull();
     }
@@ -231,7 +246,7 @@ public class JWSPolicyTest {
         when(environment.getProperty(String.format(PUBLIC_KEY_PROPERTY, KID))).thenReturn(getPublicKey());
 
         // Prepare context
-        Buffer ret = jwsPolicy.map(executionContext, policyChain).apply(Buffer.buffer(input));
+        Buffer ret = jwsPolicyV3.map(executionContext, policyChain).apply(Buffer.buffer(input));
         assertThat(ret).isNotNull();
 
         JSONAssert.assertEquals(expected, ret.toString(), false);
@@ -244,7 +259,7 @@ public class JWSPolicyTest {
         X509Certificate cert = (X509Certificate) certificateFactory.generateCertificate(
             new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8))
         );
-        jwsPolicy.validateCRLSFromCertificate(cert, null);
+        jwsPolicyV3.validateCRLSFromCertificate(cert, null);
     }
 
     @Test
@@ -256,9 +271,14 @@ public class JWSPolicyTest {
             new ByteArrayInputStream(fileContent.getBytes(StandardCharsets.UTF_8))
         );
 
-        Exception exception = assertThrows(CertificateException.class, () -> jwsPolicy.validateCRLSFromCertificate(cert, null));
+        CRLValidator.validateCRLSFromCertificate(cert, null).test().assertError(CertificateException.class);
+
+        Exception exception = assertThrows(
+            RuntimeException.class,
+            () -> CRLValidator.validateCRLSFromCertificate(cert, null).blockingAwait()
+        );
         String expectedMessage = "Certificate has been revoked";
-        String actualMessage = exception.getMessage();
+        String actualMessage = exception.getCause().getMessage();
 
         assertTrue(actualMessage.contains(expectedMessage));
     }
@@ -273,7 +293,7 @@ public class JWSPolicyTest {
         when(environment.getProperty(String.format(PUBLIC_KEY_PROPERTY, KID))).thenReturn(getAbsoluteFilePath(pemFile));
 
         // Prepare context
-        Buffer ret = jwsPolicy.map(executionContext, policyChain).apply(Buffer.buffer(input));
+        Buffer ret = jwsPolicyV3.map(executionContext, policyChain).apply(Buffer.buffer(input));
         assertThat(ret).isNotNull();
 
         JSONAssert.assertEquals(expected, ret.toString(), false);
@@ -281,11 +301,12 @@ public class JWSPolicyTest {
 
     /**
      * Return Json Web Token string value.
+     *
      * @return String
      * @throws Exception
      */
     private String getJsonWebToken(String publicKeyDerFile, boolean useKeyPair, Map<String, Object> additionalHeaders) throws Exception {
-        Map<String, Object> header = new HashMap();
+        Map<String, Object> header = new HashMap<>();
         header.put("alg", "RS256");
         header.put("kid", KID);
         header.put("x5c", getPublicKeyCertificateX5CDERFormat(publicKeyDerFile));
@@ -304,6 +325,7 @@ public class JWSPolicyTest {
 
     /**
      * Get the RSA private key
+     *
      * @return
      * @throws Exception
      */
@@ -313,6 +335,7 @@ public class JWSPolicyTest {
 
     /**
      * Return string value of public key matching format ssh-(rsa|dsa) ([A-Za-z0-9/+]+=*) (.*)
+     *
      * @return String
      * @throws IOException
      */
@@ -345,6 +368,7 @@ public class JWSPolicyTest {
      * The "x5c" (X.509 certificate chain) Header Parameter contains the
      * X.509 public key certificate or certificate chain [RFC5280]
      * corresponding to the key used to digitally sign the JWS.
+     *
      * @param publicKeyDerFile
      * @return
      * @throws Exception
@@ -392,6 +416,7 @@ public class JWSPolicyTest {
      * ==> Will create id_rsa & id_rsa.pub
      * Then run : openssl pkcs8 -topk8 -inform PEM -outform DER -in id_rsa -out private_key.der -nocrypt
      * ==> Will create private_key.der unsecured that can be used.
+     *
      * @return
      * @throws Exception
      */
