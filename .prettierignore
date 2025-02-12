@@ -1,0 +1,4 @@
+target/
+
+# Ignore all the resource files related to the JWS policy tests (cert files, keys, jsons, etc.)
+src/test/resources/io/gravitee/policy/jws/
