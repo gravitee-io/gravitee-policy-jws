@@ -1,3 +1,20 @@
+# [2.0.0](https://github.com/gravitee-io/gravitee-policy-jws/compare/1.6.1...2.0.0) (2025-02-25)
+
+
+### chore
+
+* **deps:** bump gravitee-parent to 22 ([7a45654](https://github.com/gravitee-io/gravitee-policy-jws/commit/7a4565419cf7812cbb8d58235beef8813ccb5fdc))
+
+
+### Features
+
+* support reactive engine ([6e33fbe](https://github.com/gravitee-io/gravitee-policy-jws/commit/6e33fbeb9e6713a69506ab98ea623b999a830e75))
+
+
+### BREAKING CHANGES
+
+* **deps:** now use JDK 17 as source and target compilation
+
 ## [1.6.1](https://github.com/gravitee-io/gravitee-policy-jws/compare/1.6.0...1.6.1) (2024-03-07)
 
 
