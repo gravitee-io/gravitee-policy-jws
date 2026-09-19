@@ -52,8 +52,7 @@ public class CRLValidator {
         }
 
         CRLDistPoint distPoint = getCRLDistPoint(crlDistributionPointDerEncodedArray);
-        return Flowable
-            .fromArray(distPoint.getDistributionPoints())
+        return Flowable.fromArray(distPoint.getDistributionPoints())
             .map(DistributionPoint::getDistributionPoint)
             .filter(dpn -> dpn.getType() == DistributionPointName.FULL_NAME)
             .map(dpn -> GeneralNames.getInstance(dpn.getName()).getNames())

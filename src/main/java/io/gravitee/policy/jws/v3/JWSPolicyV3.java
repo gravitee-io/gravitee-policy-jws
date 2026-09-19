@@ -130,8 +130,7 @@ public class JWSPolicyV3 {
 
     @OnRequestContent
     public ReadWriteStream onRequestContent(Request request, ExecutionContext executionContext, PolicyChain policyChain) {
-        return TransformableRequestStreamBuilder
-            .on(request)
+        return TransformableRequestStreamBuilder.on(request)
             .chain(policyChain)
             .contentType(MediaType.APPLICATION_JSON)
             .transform(map(executionContext, policyChain))
@@ -291,8 +290,9 @@ public class JWSPolicyV3 {
                             URLConnection connection = url.openConnection();
                             inStream = new DataInputStream(connection.getInputStream());
                             crl = (X509CRL) certificateFactory().generateCRL(inStream);
-                            revokedCertificate =
-                                crl.getRevokedCertificate(serialNumber != null ? serialNumber : certificate.getSerialNumber());
+                            revokedCertificate = crl.getRevokedCertificate(
+                                serialNumber != null ? serialNumber : certificate.getSerialNumber()
+                            );
                         } catch (Exception e) {
                             hasError = true;
                             LOGGER.warn("Failed to get the certificate revocation list, try the next one if any", e);

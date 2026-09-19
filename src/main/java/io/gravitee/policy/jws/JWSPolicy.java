@@ -50,7 +50,8 @@ public class JWSPolicy extends JWSPolicyV3 implements HttpPolicy {
             .flatMapCompletable(buffer -> validateJsonWebTokenRx(buffer.toString(), environment))
             .onErrorResumeNext(th ->
                 switch (th.getClass().getSimpleName()) {
-                    case "UnsupportedJwtException",
+                    case
+                        "UnsupportedJwtException",
                         "ExpiredJwtException",
                         "MalformedJwtException",
                         "SignatureException",
