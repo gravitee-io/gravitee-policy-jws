@@ -273,9 +273,8 @@ public class JWSPolicyV3EngineTest {
 
         CRLValidator.validateCRLSFromCertificate(cert, null).test().assertError(CertificateException.class);
 
-        Exception exception = assertThrows(
-            RuntimeException.class,
-            () -> CRLValidator.validateCRLSFromCertificate(cert, null).blockingAwait()
+        Exception exception = assertThrows(RuntimeException.class, () ->
+            CRLValidator.validateCRLSFromCertificate(cert, null).blockingAwait()
         );
         String expectedMessage = "Certificate has been revoked";
         String actualMessage = exception.getCause().getMessage();
