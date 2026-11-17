@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/gravitee-io/gravitee-policy-jws/compare/2.0.0...2.0.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* **deps:** stop bundling jackson in the plugin zip ([a1e7edd](https://github.com/gravitee-io/gravitee-policy-jws/commit/a1e7edd4e9375031cf7ad7e800e5233d62354bbb))
+
 # [2.0.0](https://github.com/gravitee-io/gravitee-policy-jws/compare/1.6.1...2.0.0) (2025-02-25)
 
 
